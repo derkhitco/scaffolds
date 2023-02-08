@@ -1,0 +1,36 @@
+{
+  "rules": {
+    "texts": {
+      ".read": true,
+      ".write": "auth.token.admin === true"
+    },
+    "articles": {
+      ".read": true,
+      ".write": "auth.token.admin === true"
+    },
+    "orders": {
+      "$order": {
+        ".read": true,
+        ".write": "auth.token.admin === true"
+      },
+      ".read": "auth.token.admin === true",
+      ".write": "auth.token.admin === true"
+    },
+    "contactForms": {
+      ".read": "auth.token.admin === true",
+      ".write": "auth.token.admin === true"
+    },
+    "brands": {
+      ".read": true,
+      ".write": "auth.token.admin === true"
+    },
+    "users": {
+      ".read": "auth.token.admin === true",
+      ".write": "auth.token.admin === true",
+      "$uid": {
+        ".read": "auth !== null && (auth.token.admin === true || auth.uid === $uid)",
+        ".write": "auth !== null && auth.token.admin === true"
+      }
+    }
+  }
+}
