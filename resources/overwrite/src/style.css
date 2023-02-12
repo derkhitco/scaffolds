@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer components {
+    .btn-primary-1 {
+      @apply ml-3 inline-flex justify-center rounded-md border border-transparent bg-primary-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    }
+  
+    .admin-title-1 {
+      @apply text-xl font-semibold text-gray-900;
+    }
+  
+    .admin-text-1 {
+      @apply mt-2 text-sm text-gray-700;
+    }
+  }
