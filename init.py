@@ -136,7 +136,11 @@ def change_package_json(args):
 
     # changing it
     package_json['scripts']['newpage'] = "cd .scripts && python3 create_page.py"
-    package_json['scripts']['dev'] = "vite --port 8080"
+    if args.mode == 'ssr':
+        package_json['scripts']['dev'] = "vite --port 8080"
+    else:
+        package_json['scripts']['dev'] = "vite-ssr --port 8080"
+
 
     # writing it back
     with open(package_file, 'w') as file:

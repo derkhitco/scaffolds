@@ -3,7 +3,7 @@ import { RemovableRef, useStorage as _useStorage } from '@vueuse/core'
 import { ref, computed } from 'vue'
 import { Analytics, getAnalytics } from "firebase/analytics";
 import { logEvent as _logEvent } from "firebase/analytics";
-import { firebaseApp, siteName } from './../main';
+import { firebaseApp } from './../firebase';
 import type { Ref } from 'vue';
 
 import { ConfigStatus } from '../util/types';
@@ -11,6 +11,8 @@ import { browserLocalPersistence, inMemoryPersistence } from "firebase/auth";
 
 
 export const useConfigStore = defineStore('config', () => {
+
+    const siteName = 'SiteName'
 
     // Everything for remembering the user's choices about privacy
     let localStorage: RemovableRef<ConfigStatus | Object> = _useStorage(`${siteName}.config`, {})
