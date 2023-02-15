@@ -5,6 +5,6 @@ import viteSSR from 'vite-ssr/plugin.js'
 export default {
   plugins: [
     viteSSR(),
-    vue(), // react()
+    vue(),
   ],
 }

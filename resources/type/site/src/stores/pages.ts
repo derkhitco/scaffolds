@@ -21,9 +21,7 @@ export const usePageStore = defineStore('pages', () => {
     const textsRef = dbref(db, textsPath)
 
     // computed pages, do not remove this line
-	const overOns = computed(() => texts.value.overOns)
-	const sustainable = computed(() => texts.value.sustainable)
-    const home = computed(() => texts.value.home)
+	const home = computed(() => texts.value.home)
     const about = computed(() => texts.value.about)
 
     async function save() {
@@ -44,9 +42,7 @@ export const usePageStore = defineStore('pages', () => {
     
     return {
         // return statement, do not remove this line
-		overOns,
-		sustainable,
-        home,
+		home,
         about,
         save
     }

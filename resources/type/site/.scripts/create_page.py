@@ -12,7 +12,7 @@ page_words = page_name.split()
 def move_page_files(file_name, text_capital, store, text):
     from_edit_page = 'resources/EditPage.vue'
     from_page = 'resources/Page.vue'
-    to_edit_page = f'./../src/views/admin/Edit{file_name}.vue'
+    to_edit_page = f'./../src/views/app/Edit{file_name}.vue'
     to_page = f'./../src/views/site/{file_name}.vue'
 
     with open(from_edit_page, 'r') as file_from, open(to_edit_page, 'w+') as file_to:
@@ -64,7 +64,7 @@ def add_routes(file_name, text_capital):
             new_content.append(f"import {file_name} from './views/site/{file_name}.vue'\n")
             where = ''
         if where == 'adminImports':
-            new_content.append(f"import Edit{file_name} from './views/admin/Edit{file_name}.vue'\n")
+            new_content.append(f"import Edit{file_name} from './views/app/Edit{file_name}.vue'\n")
             where = ''
         if where == 'site':
             new_content.append('\t\t\t{\n')

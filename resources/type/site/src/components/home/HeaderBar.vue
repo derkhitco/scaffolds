@@ -24,7 +24,6 @@ const navigation = computed((): { name: string, href: string }[] => {
     const children = router.getRoutes().filter((route) => route.path == '/' && route.children.length > 0)[0].children
     const results = children.map((child) => {
         if (child.meta?.inHeader) {
-            console.log(child)
             return {
                 name: child.name?.toString(),
                 href: child.path.toString(),

@@ -1,8 +1,8 @@
-import { app } from "./../firebase";
+import { firebaseApp } from "./../firebase";
 import { getStorage, ref as storRef, getDownloadURL, uploadBytes } from "firebase/storage";
 import { FileObject } from "./types";
 
-const storage = getStorage(app);
+const storage = getStorage(firebaseApp);
 
 export async function reloadStorageRefs(obj: any, outer = true, promises: Promise<any>[] = []) {
     // If it is not an object, there will be no uploadables

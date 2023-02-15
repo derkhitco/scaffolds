@@ -20,4 +20,6 @@ if (process.env.NODE_ENV === 'local') {
   connectFunctionsEmulator(functions, 'localhost', 5001);
 }
 
-export { firebaseConfig, functions, app }
+const firebaseApp = initializeApp(firebaseConfig);
+
+export { functions, firebaseApp }
