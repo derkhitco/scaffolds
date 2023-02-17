@@ -4,6 +4,16 @@ import os
 import json
 
 
+def _copy_with_insert(old_file, new_file, **placeholdervals):
+    with open(old_file, 'r') as file_from, open(new_file, 'w+') as file_to:
+        for line in file_from.readlines():
+            content = line
+            for placeholder, value in placeholdervals.items():
+                content = content.replace(
+                    f'{{%{placeholder.upper()}%}}', value)
+            file_to.write(content)
+
+
 def doPrint(*args, **kwargs):
     icon = kwargs.get('icon', '\u25B6')
     print(str(icon), *args, '\n', sep=' ')
@@ -22,17 +32,20 @@ def prep_parser():
         description='Scaffold a new typescript Vue project based on firebase',
         epilog='Text at the bottom of help')
     # positional argument
-    parser.add_argument('name', help="The name of the project. This will be the name of the folder too.")
+    parser.add_argument(
+        'name', help="The name of the project. This will be the name of the folder too.")
     # option that takes a value
-    parser.add_argument('-t', '--type', help="The type of the project (app, site).")
-    parser.add_argument('-m', '--mode', help="The mode of the project (SPA, SSR).")
-    parser.add_argument('-r', '--rootdir', help="The root directory where the project should be initiated.")
+    parser.add_argument(
+        '-t', '--type', help="The type of the project (app, site).")
+    parser.add_argument(
+        '-m', '--mode', help="The mode of the project (SPA, SSR).")
+    parser.add_argument(
+        '-r', '--rootdir', help="The root directory where the project should be initiated.")
     return parser
 
 
 def validate_args(args):
-    
-    
+
     if args.rootdir:
         if not os.path.isdir(args.rootdir):
             print("Error: invalid root directory. The directory does not exist.")
@@ -66,12 +79,47 @@ def validate_args(args):
     return args
 
 
-def create_vite_project(args):
-    doPrint("Creating vite project")
+def initiate(args):
+    os.chdir(args.rootdir)
+    os.mkdir(args.name)
+    os.chdir(args.script_dir)
+
+
+def init_firebase(args):
+    doPrint("Initializing firebase project, give your inputs when prompted.")
+    os.chdir(args.rootdir + '/' + args.name)
+    os.system("npx firebase init hosting")
+    os.system("npx firebase init functions")
+    fb_info_txt = '{' + '\n'.join(os.popen("firebase apps:sdkconfig").read().split('\n')[5:-3]) + '}'
+    fb_info = json.loads(fb_info_txt)
+    args.fb_info = fb_info
+
+    firebase_json = {
+        "functions": {"source": ".output/server"},
+        "hosting": [
+            {
+                "site": fb_info['projectId'],
+                "public": ".output/public",
+                "cleanUrls": True,
+                "rewrites": [{"source": "**", "function": "server"}]
+            }
+        ]
+    }
+
+    with open('firebase.json', 'w') as f:
+        json.dump(firebase_json, f, indent=2)
+
+    os.chdir(args.script_dir)
+
+    return args
+
+
+def create_nuxt_project(args):
+    doPrint("Creating nuxt project")
 
     os.chdir(args.rootdir)
-    os.system("yarn create vite " + args.name +
-              " --template vue-ts > /dev/null 2>&1")
+    # os.mkdir(args.name)
+    os.system("npx nuxi init " + args.name + "> /dev/null 2>&1")
     os.chdir(args.rootdir + '/' + args.name)
     os.system("yarn > /dev/null 2>&1")
     os.chdir(args.script_dir)
@@ -81,49 +129,50 @@ def install_dependencies(args):
     doPrint("Installing dependencies")
 
     os.chdir(args.rootdir + '/' + args.name)
+
     # Defining needed dependencies
     dev_packages = {
-        "common": ("postcss@^8.1.0", "tailwindcss", "postcss", "autoprefixer", "@types/uuid"),
-        "site":(),
-        "app":(),
+        "common": ("@types/uuid", 'firebase-tools', 'firebase-admin', 'firebase-functions'),
+        "site": (),
+        "app": (),
         "ssr": (),
         "spa": (),
     }
     packages = {
-        "ssr": ("vite-ssr", "@vueuse/head", "@nuxt/devalue"),
-        "site":(),
-        "app":(),
+        "common": ("@nuxtjs/tailwindcss", "@headlessui/vue", "@heroicons/vue", "@tiptap/core", "@tiptap/extension-underline", "@tiptap/pm", "@tiptap/starter-kit", "@tiptap/vue-3", "firebase", "pinia", "@pinia/nuxt", "uuid", "vue-heroicons", "@vueuse/core", "@tailwindcss/forms"),
+        "site": (),
+        "app": (),
+        "ssr": (),
         "spa": (),
-        "common": ("vue@3", "vue-router@4", "@headlessui/vue", "@heroicons/vue", "@tiptap/core", "@tiptap/extension-underline", "@tiptap/pm", "@tiptap/starter-kit", "@tiptap/vue-3", "firebase", "pinia", "uuid", "vue-heroicons", "@vueuse/core", "@tailwindcss/forms")
     }
     # Installing dependencies
-    os.system("yarn add -D " +" ".join(dev_packages["common"]) + "> /dev/null 2>&1")
-    os.system("yarn add -D " +" ".join(dev_packages[args.mode]) + "> /dev/null 2>&1")
-    os.system("yarn add -D " +" ".join(dev_packages[args.type]) + "> /dev/null 2>&1")
+    os.system("yarn add -D " +
+              " ".join(dev_packages["common"]) + "> /dev/null 2>&1")
+    os.system("yarn add -D " +
+              " ".join(dev_packages[args.mode]) + "> /dev/null 2>&1")
+    os.system("yarn add -D " +
+              " ".join(dev_packages[args.type]) + "> /dev/null 2>&1")
 
-    os.system("yarn add " +" ".join(packages["common"]) + "> /dev/null 2>&1")
-    os.system("yarn add " +" ".join(packages[args.mode]) + "> /dev/null 2>&1")
-    os.system("yarn add " +" ".join(packages[args.type]) + "> /dev/null 2>&1")
-    
-    os.chdir(args.script_dir)
+    os.system("yarn add " + " ".join(packages["common"]) + "> /dev/null 2>&1")
+    os.system("yarn add " + " ".join(packages[args.mode]) + "> /dev/null 2>&1")
+    os.system("yarn add " + " ".join(packages[args.type]) + "> /dev/null 2>&1")
 
-
-def init_tailwind(args):
-    doPrint("Initializing tailwind")
-    os.chdir(args.rootdir + '/' + args.name)
-    os.system("npx tailwindcss init -p" + "> /dev/null")
     os.chdir(args.script_dir)
 
 
 def copy_resources(args):
     doPrint("Copying resources")
-    os.chdir(args.rootdir + '/' + args.name)
-    os.system('rm -rf src/components')
-    os.system('rm -rf src/assets')
     os.chdir(args.script_dir)
-    os.system(f"cp -rf {args.script_dir}/resources/common/  {args.rootdir}/{args.name}")
-    os.system(f"cp -rf {args.script_dir}/resources/mode/{args.mode}/  {args.rootdir}/{args.name}")
-    os.system(f"cp -rf {args.script_dir}/resources/type/{args.type}/  {args.rootdir}/{args.name}")
+    os.system(
+        f"cp -rf {args.script_dir}/resources/nuxt/  {args.rootdir}/{args.name}")
+    fb_config_string = json.dumps(args.fb_info)
+    changes = {
+        'firebase.ts': {"FBCONFIG": fb_config_string},
+        'plugins/firebase.client.ts': {"FBCONFIG": fb_config_string}
+    }
+    for file, changes in changes.items():
+        _copy_with_insert(
+            f"{args.script_dir}/resources/nuxt/{file}", f"{args.rootdir}/{args.name}/{file}", **changes)
 
 
 def change_package_json(args):
@@ -136,16 +185,12 @@ def change_package_json(args):
 
     # changing it
     package_json['scripts']['newpage'] = "cd .scripts && python3 create_page.py"
-    if args.mode == 'ssr':
-        package_json['scripts']['dev'] = "vite --port 8080"
-    else:
-        package_json['scripts']['dev'] = "vite-ssr --port 8080"
-
+    package_json['scripts']['deploy'] = "NITRO_PRESET=firebase yarn build && npx firebase deploy"
 
     # writing it back
     with open(package_file, 'w') as file:
         json.dump(package_json, file, indent=4)
-    
+
     os.chdir(args.rootdir + '/' + args.name)
     os.system(".scripts >> .gitignore >/dev/null 2>&1")
 
@@ -153,11 +198,52 @@ def change_package_json(args):
 args = prep_parser().parse_args()
 args = validate_args(args)
 
-
 print_welcome(args)
-create_vite_project(args)
+initiate(args)
+create_nuxt_project(args)
+args = init_firebase(args)
 install_dependencies(args)
-init_tailwind(args)
 copy_resources(args)
 change_package_json(args)
 doPrint("Done!", icon='\u2705')
+
+# args = fb_info_raw.split()
+
+# '// Copy and paste this into your JavaScript code to initialize the Firebase SDK.',
+# '// You will also need to load the Firebase SDK.',
+# '// See https://firebase.google.com/docs/web/setup for more details.',
+# 'firebase.initializeApp({',
+# '  "projectId": "hitco-scaffold",',
+# '  "appId": "1:448658195585:web:58131370b033ebf0383980",',
+# '  "databaseURL": "https://hitco-scaffold-default-rtdb.europe-west1.firebasedatabase.app",',
+# '  "storageBucket": "hitco-scaffold.appspot.com",',
+# '  "locationId": "europe-west",',
+# '  "apiKey": "AIzaSyD5dYIS2IThzWRC4a73erGk8_lLMCyn_C4",',
+# '  "authDomain": "hitco-scaffold.firebaseapp.com",',
+# '  "messagingSenderId": "448658195585",',
+# '  "measurementId": "G-EV3X4CW9W9"',
+# '});',
+
+
+# x.plit()[5:-1]
+
+
+# To make it work:
+# - firebase init
+# - replace firebase json with
+# {
+#   "functions": { "source": ".output/server" },
+#   "hosting": [
+#     {
+#       "site": "hitco-scaffold",
+#       "public": ".output/public",
+#       "cleanUrls": true,
+#       "rewrites": [{ "source": "**", "function": "server" }]
+#     }
+#   ]
+# }
+# - NITRO_PRESET=firebase yarn build
+
+# # Should change stuff to rename function and add caching
+
+# - npx firebase deploy
